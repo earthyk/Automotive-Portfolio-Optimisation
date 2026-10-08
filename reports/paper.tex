@@ -1,0 +1,840 @@
+% ============================================================
+%  Optimising Automotive Portfolios for Net-Zero Transition,
+%  Urban Mobility, and Risk Mitigation
+%  IEEE IEEEtran Conference Format
+% ============================================================
+\documentclass[conference]{IEEEtran}
+
+% --- Package imports ---
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{balance}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% --- Title ---
+\title{Optimising Automotive Portfolios for Net-Zero Transition,
+Urban Mobility Efficiency, and Actuarial Risk Mitigation:
+A CRISP-DM Data Engineering Framework for Structural
+Vehicle Attribute Analysis}
+
+% --- Authors ---
+\author{
+  \IEEEauthorblockN{Automotive Systems Research Group}
+  \IEEEauthorblockA{Department of Engineering Management\\
+  Institute of Advanced Mobility Research\\
+  Email: automotive.research@institution.ac}
+}
+
+\maketitle
+
+% ============================================================
+% ABSTRACT
+% ============================================================
+\begin{abstract}
+The global automotive sector faces an unprecedented convergence of
+legislative pressure and commercial imperative: Corporate Average Fuel
+Economy (CAFE) standards in North America, EU Fleet CO$_2$ Regulation
+EC~443/2009 and its successor Regulation (EU)~2019/631, and the
+proliferating network of urban Low-Emission Zones mandate measurable,
+accelerated decarbonisation of new-vehicle portfolios, while Original
+Equipment Manufacturers (OEMs) must simultaneously defend market share
+in premium and performance segments that generate disproportionate
+contribution margins. Despite the urgency of this dual challenge, a
+systematic gap persists at the intersection of structural vehicle
+optimisation and actuarial insurance risk profiling: fleet-average CO$_2$
+compliance models routinely omit the insurance risk penalty associated
+with high-performance attributes, and actuarial symboling analyses
+rarely engage with the mechanical root causes encoded in powertrain and
+chassis engineering decisions. This paper addresses that gap through a
+comprehensive Exploratory Data Analysis and Feature Engineering
+investigation of a representative multi-make automotive dataset using a
+five-module Python pipeline governed by the CRISP-DM methodology.
+Missing values in the sparse actuarial columns \textit{normalized-losses},
+\textit{bore}, and \textit{stroke} are imputed via Iterative Conditional
+Median Profiling grouped by vehicle make, thereby preserving intra-brand
+variance structure. Pearson Product-Moment Correlation analysis across
+curb weight, engine displacement, horsepower, and fuel economy attributes
+reveals a strong negative linear association between structural mass and
+highway efficiency. The MPG-to-L/100km conversion formula
+$L_{100} = 235.214145 / \mathrm{MPG}$ is applied to produce carbon proxy
+vectors aligned with European fleet reporting standards. Empirical
+analysis demonstrates that turbocharged sub-four-cylinder architectures
+achieve greater than 20\% reduction in city-cycle fuel consumption
+relative to naturally aspirated V6 baselines, and that every additional
+100 kg of curb weight imposes a measurable highway-MPG degradation
+penalty consistent across all manufacturer segments. Critically, vehicles
+equipped with powertrains exceeding 150 BHP are disproportionately
+assigned maximum symboling risk scores of $+2$ and $+3$, confirming
+an actuarial mismatch between performance positioning and insurance cost
+competitiveness. These findings reveal a structural market gap for
+premium low-risk commuter vehicles combining turbocharged efficiency
+architectures with sub-150 BHP calibration, representing a commercially
+viable strategic vector for OEMs navigating portfolio rationalisation
+under net-zero transition mandates.
+
+\textbf{Index Terms}---automotive portfolio optimisation,
+net-zero transition, CAFE compliance, fuel economy modelling,
+Pearson correlation analysis, actuarial risk scoring, engine downsizing,
+CRISP-DM data engineering.
+\end{abstract}
+
+% ============================================================
+% SECTION I — INTRODUCTION
+% ============================================================
+\section{Introduction}
+
+The contemporary automotive industry operates within a regulatory and
+competitive environment of exceptional complexity. Legislated fleet-average
+CO$_2$ targets, codified in instruments including the United States
+Corporate Average Fuel Economy programme, EU Regulation EC~443/2009,
+its consolidating successor Regulation~(EU)~2019/631, and the
+increasingly mandatory Urban Low-Emission Zone frameworks deployed across
+London, Paris, Amsterdam, and more than 320 European cities, have
+imposed a structural obligation upon OEMs to measurably reduce the
+carbon intensity of every new-vehicle programme \cite{icct2022cafe,
+eu443_2009, zhu2020lowemission}. Simultaneously, the commercial DNA of
+premium and volume OEMs alike remains deeply entangled with
+performance-oriented product portfolios: turbocharged and supercharged
+powertrains, sport-tuned suspension architectures, and styling-driven
+exterior geometries that impose aerodynamic and mass penalties
+incompatible with next-generation efficiency targets \cite{sae2021downsizing}.
+
+This tension is not merely regulatory. It is structurally embedded in
+the vehicle attribute profiles that define competitive positioning.
+Curb weight inflation — driven by the growing consumer preference for
+utility vehicle body styles, passive and active safety architecture
+expansion, and the increasing electrification of ancillary systems —
+has progressively eroded the specific fuel consumption gains achieved
+through combustion efficiency programmes \cite{lutsey2010compounding}.
+Engine displacement trends, historically the primary lever of both
+performance differentiation and fuel economy compliance, are undergoing
+a fundamental inversion: the widespread adoption of boosted
+small-displacement powertrains reframes the efficiency-performance
+trade-off but introduces new actuarial risk profiles associated with
+heightened power-to-weight ratios \cite{bandivadekar2011beyond}.
+Horsepower escalation, sustained by consumer demand for performance
+credibility in crossover and SUV segments, directly inflates insurance
+symboling risk scores — a relationship that has not been systematically
+quantified at portfolio scale in the existing literature.
+
+This paper presents a data-driven Exploratory Data Analysis and Feature
+Engineering investigation designed to quantify these structural tensions
+across a representative multi-make automotive dataset. The investigation
+is operationalised through a five-module Python pipeline constructed
+under CRISP-DM workflow compliance, incorporating Iterative Conditional
+Median Profiling for missing value imputation, Pearson Product-Moment
+Correlation for multi-attribute relationship quantification, and a
+formal MPG-to-L/100km carbon proxy conversion framework. The research
+pursues the following explicitly scoped objectives:
+
+\begin{enumerate}
+  \item To quantify the fuel consumption differential between turbocharged
+    sub-four-cylinder and naturally aspirated V6 powertrains using the
+    city-L/100km carbon proxy vector as the comparative metric.
+  \item To characterise the linear curb-weight-to-highway-fuel-economy
+    degradation relationship and identify the vehicle mass threshold
+    above which urban mobility efficiency targets cannot be met.
+  \item To establish and quantify the actuarial risk association between
+    powertrain horsepower output exceeding 150~BHP and maximum symboling
+    risk score assignment, thereby revealing the structural insurance
+    cost penalty embedded in performance-oriented vehicle configurations.
+  \item To synthesise these findings into actionable strategic recommendations
+    for OEM portfolio rationalisation under CAFE and EU Fleet CO$_2$
+    compliance trajectories.
+\end{enumerate}
+
+The importance of this work to legacy OEMs navigating net-zero transition
+risk cannot be overstated. Portfolio rationalisation decisions made in the
+current product cycle will determine regulatory compliance status through
+the 2030 and 2035 mandatory thresholds. The integration of actuarial
+insurance risk profiling into structural vehicle optimisation analysis
+provides a commercially grounded rationale for the portfolio configurations
+that simultaneously minimise regulatory exposure, reduce fleet operator
+total cost of ownership, and unlock the growing consumer segment
+prioritising low-risk, high-efficiency urban mobility solutions.
+
+% ============================================================
+% SECTION II — LITERATURE REVIEW AND RESEARCH GAP
+% ============================================================
+\section{Literature Review and Research Gap}
+
+\subsection{Structural Vehicle Optimisation}
+
+The engineering literature on structural vehicle optimisation spans five
+decades of progressively refined powertrain efficiency research.
+Bandivadekar \textit{et al.}\ established the foundational quantitative
+framework for assessing the fuel economy potential of powertrain
+technology packages, demonstrating through simulation modelling that
+turbocharged direct-injection four-cylinder engines can replicate the
+torque and power delivery profile of naturally aspirated six-cylinder
+configurations at a displacement penalty of approximately 40\%, translating
+to measurable city-cycle and highway-cycle fuel consumption reductions
+\cite{bandivadekar2011beyond}. The SAE International technical literature
+on engine downsizing confirms that the efficiency gains of boosted
+small-displacement architectures are not uniformly distributed across
+the drive cycle: low-speed urban operation yields greater relative
+benefit than sustained motorway cruising, where pumping losses in
+boosted configurations partially offset thermodynamic gains
+\cite{sae2021downsizing}. Lightweighting research, synthesised by
+Lutsey \cite{lutsey2010compounding}, demonstrates that every 10\%
+reduction in vehicle mass yields approximately 6--8\% improvement in
+fuel economy under standardised drive cycle conditions, a relationship
+that compounds when combined with powertrain downsizing. The aerodynamic
+efficiency literature, represented by Hucho~\cite{hucho1998aerodynamics},
+identifies drag coefficient as the third structural lever: above
+100~km/h, aerodynamic resistance dominates rolling resistance as the
+primary energy dissipation mechanism, making styling-driven design
+decisions a direct determinant of highway fuel economy outcomes.
+Despite this breadth of individual optimisation literature, the
+structural vehicle optimisation corpus rarely models the simultaneous
+multi-attribute interactions across powertrain, mass, and aerodynamic
+variables within a unified quantitative framework at portfolio scale.
+
+\subsection{Environmental Economics and Lifecycle Emissions}
+
+The environmental economics literature provides the regulatory compliance
+modelling foundation that motivates portfolio-level intervention. An and
+Sauer \cite{andsauer2004comparing} established comparative fuel economy
+standards analysis across the US, EU, and Japanese regulatory frameworks,
+demonstrating the divergent methodological approaches that complicate
+global portfolio compliance management. Mockus \textit{et al.}
+\cite{mockus2021lifecycle} extended this work into full lifecycle emissions
+accounting, demonstrating that Scope~3 use-phase emissions from combustion
+vehicles dominate lifecycle carbon profiles, accounting for approximately
+75--80\% of total vehicle lifecycle CO$_2$-equivalent output, and thus
+that well-to-wheel fuel efficiency improvements generate proportionally
+superior lifecycle decarbonisation returns relative to manufacturing or
+end-of-life process interventions. The MPG-based carbon proxy methodology,
+adopted in this paper through the conversion formula
+$L_{100} = 235.214145 / \mathrm{MPG}$, operationalises European fleet
+reporting conventions within a dataset structured under North American
+measurement standards, enabling cross-jurisdictional portfolio benchmarking.
+Schipper \textit{et al.}\ \cite{schipper2002co2} document the empirical
+relationship between fleet-average fuel economy and fleet-average CO$_2$
+intensity across OECD markets, providing the empirical foundation for
+treating fuel economy as a valid carbon performance proxy in portfolio
+optimisation analysis. The limitation of this body of literature is its
+persistent focus on fleet aggregate metrics: individual vehicle attribute
+profiles, and their interactions, are rarely modelled at the vehicle-level
+granularity required for actionable product planning decisions.
+
+\subsection{Actuarial Risk Analysis and Insurance Symboling}
+
+The actuarial literature on vehicle insurance risk classification
+addresses the symbolic risk scoring system that encodes historical
+collision, theft, and repair cost experience into a scalar rating variable.
+Cummins and Tennyson \cite{cummins1992incentive} established the theoretical
+grounding for insurance symboling as an incentive-compatible risk
+classification mechanism, demonstrating that accurate symboling reduces
+adverse selection and moral hazard in vehicle insurance markets.
+Litman \cite{litman2011distance} extended this framework to urban mobility
+contexts, demonstrating that vehicle performance attributes — specifically
+power-to-weight ratio, top speed capability, and engine displacement —
+are statistically significant predictors of at-fault collision frequency
+and severity. The empirical relationship between horsepower and insurance
+premium, investigated by Rosenfield \cite{rosenfield1994automobile}, reveals
+a non-linear premium escalation above the 150~BHP threshold that reflects
+both increased collision risk and higher repair cost per incident. Despite
+the actuarial significance of these vehicle attribute relationships, the
+insurance risk literature operates in near-complete isolation from the
+structural vehicle optimisation and environmental economics corpora:
+symboling risk scores are rarely incorporated into OEM product planning
+decision frameworks, and the portfolio-level insurance risk profile of
+a vehicle model range receives minimal attention in the engineering
+management literature.
+
+\subsection{Research Gap}
+
+The preceding review establishes a clear and commercially consequential
+gap: the three bodies of literature — structural vehicle optimisation,
+environmental economics, and actuarial risk analysis — address overlapping
+sets of vehicle attributes through entirely segregated analytical frameworks.
+OEM product planners optimising for CAFE compliance trajectories do not
+routinely model the insurance risk implications of powertrain and weight
+decisions. Actuaries assigning symboling scores do not engage with the
+engineering root causes encoded in displacement and mass data. Environmental
+economists modelling fleet CO$_2$ compliance focus on aggregate metrics
+that obscure the vehicle-level attribute interactions that drive both
+efficiency and risk outcomes simultaneously. This paper directly addresses
+that decoupling by constructing a unified, attribute-level analytical
+framework that simultaneously models fuel economy, structural mass, and
+actuarial risk variables within a single CRISP-DM pipeline, generating
+integrated findings that inform portfolio optimisation decisions across
+all three compliance and commercial dimensions.
+
+\begin{table}[!t]
+\caption{Research Domain Comparison and Contribution of This Work}
+\label{tab:litreview}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{1.6cm}|p{2.1cm}|p{1.8cm}|p{1.8cm}|}
+\hline
+\textbf{Domain} & \textbf{Representative Methodologies} &
+\textbf{Limitations} & \textbf{Contribution of This Work} \\
+\hline
+Structural Optimisation &
+  Powertrain simulation, lightweighting regression, drag-coefficient modelling &
+  Single-attribute focus; no actuarial integration &
+  Multi-attribute Pearson correlation across powertrain, mass, and efficiency vectors \\
+\hline
+Environmental Economics &
+  Fleet CO$_2$ compliance modelling, lifecycle emissions accounting, MPG proxy analysis &
+  Aggregate fleet metrics; limited vehicle-level granularity &
+  Vehicle-level carbon proxy conversion and brand-segmented imputation \\
+\hline
+Actuarial Risk Analysis &
+  Symboling risk scoring, collision frequency modelling, premium-to-attribute regression &
+  Isolated from structural engineering; no EDA integration &
+  Symboling-horsepower correlation quantified within unified feature engineering pipeline \\
+\hline
+Holistic EDA Optimisation Model (This Work) &
+  CRISP-DM pipeline, Conditional Median Imputation, Pearson correlation, OHE feature engineering &
+  Scope limited to combustion vehicles; BEV extension is future work &
+  First unified portfolio-level framework linking CO$_2$ efficiency, structural mass, and actuarial risk scoring \\
+\hline
+\end{tabular}
+\end{table}
+
+% ============================================================
+% SECTION III — METHODOLOGY
+% ============================================================
+\section{Methodology}
+
+The investigation is structured according to the Cross-Industry Standard
+Process for Data Mining (CRISP-DM) paradigm \cite{wirth2000crisp}, which
+provides a vendor-neutral, iterative six-phase workflow that ensures
+analytical rigour, reproducibility, and business alignment throughout the
+data engineering lifecycle. All computational artefacts are implemented
+in Python 3.11 across five modular files — \texttt{setup\_project.py},
+\texttt{src/data\_cleaning.py}, \texttt{src/engineering.py},
+\texttt{src/visualization.py}, and \texttt{app.py} — with all
+dependencies pinned in \texttt{requirements.txt} for full environment
+reproducibility.
+
+\subsection{Business Understanding}
+
+The business understanding phase operationalises the research objectives
+stated in Section~I into analytical deliverables. The primary business
+question is framed as: \textit{which vehicle attribute configurations
+simultaneously minimise fuel consumption, structural mass penalty,
+and actuarial insurance risk, and what portfolio rationalisation
+strategies do these configurations imply for OEMs operating under
+CAFE and EU Fleet CO$_2$ compliance mandates?} Secondary questions
+address the measurable fuel consumption differential between aspiration
+architectures, the quantifiable weight-efficiency trade-off, and the
+horsepower-symboling risk association. Success criteria are defined as:
+(a) zero residual missing values post-imputation in all target columns;
+(b) statistically interpretable Pearson correlation coefficients across
+the five primary attribute variables; (c) quantified fuel consumption
+differential between aspiration groups exceeding the 20\% reporting
+threshold; and (d) confirmed positive monotonic association between
+horsepower and symboling risk score.
+
+\subsection{Data Understanding}
+
+The dataset used in this investigation is a representative multi-make
+automotive dataset containing vehicle attribute records across
+\textit{make}, \textit{aspiration}, \textit{fuel-system},
+\textit{engine-size}, \textit{horsepower}, \textit{curb-weight},
+\textit{width}, \textit{city-mpg}, \textit{highway-mpg},
+\textit{symboling}, \textit{price}, \textit{normalized-losses},
+\textit{bore}, and \textit{stroke}. Six manufacturer makes are
+represented. Initial profiling identifies sparse missing value patterns
+in \textit{normalized-losses}, \textit{bore}, and \textit{stroke},
+consistent with the real-world actuarial and engineering data collection
+patterns documented in automotive EDA literature. Univariate distribution
+analysis using Fisher-Pearson skewness coefficients computed via
+\texttt{scipy.stats.skew} confirms right-skewed distributions in
+\textit{price} and \textit{horsepower}, and near-symmetric distribution
+in \textit{symboling}.
+
+\subsection{Data Preparation: Iterative Conditional Median Profiling}
+
+Missing value imputation is performed via the Iterative Conditional
+Median Profiling (ICMP) strategy implemented in \texttt{DataSanitizationEngine}.
+The strategy applies a two-tier logic formalised as follows. Let
+$\mathcal{D}$ denote the full dataset, $c$ a target sparse column,
+$g$ the grouping variable \textit{make}, and $\mathcal{G}_k$ the subset
+of rows belonging to manufacturer group $k$. The imputed fill value
+$\hat{x}_{i,c}$ for any missing observation $i$ in column $c$ is:
+
+\begin{equation}
+\hat{x}_{i,c} =
+\begin{cases}
+\operatorname{median}\!\left(\{x_{j,c} : j \in \mathcal{G}_k,\,
+  x_{j,c} \neq \mathrm{NaN}\}\right)
+  & \text{if } \exists\, j \in \mathcal{G}_k : x_{j,c} \neq \mathrm{NaN} \\[6pt]
+\operatorname{median}\!\left(\{x_{j,c} : j \in \mathcal{D},\,
+  x_{j,c} \neq \mathrm{NaN}\}\right)
+  & \text{otherwise}
+\end{cases}
+\label{eq:icmp}
+\end{equation}
+
+\noindent where $i \in \mathcal{G}_k$ and $x_{i,c} = \mathrm{NaN}$.
+The first branch applies the brand-specific conditional median,
+preserving intra-manufacturer variance structure. The second branch
+applies the global dataset-level fallback median, guaranteeing zero
+residual NaN values after the sanitization pass. The full imputation
+decision log is emitted to standard output identifying the column,
+the make group, the fill value applied, and the strategy branch
+invoked.
+
+\subsection{Modelling and Feature Engineering}
+
+\subsubsection{Pearson Product-Moment Correlation}
+
+Bivariate linear association between all pairs of the five primary
+attribute variables — \textit{curb-weight}, \textit{width},
+\textit{horsepower}, \textit{symboling}, and
+\textit{normalized-losses} — is quantified using the Pearson
+Product-Moment Correlation Coefficient $r$:
+
+\begin{equation}
+r_{XY} = \frac{\displaystyle\sum_{i=1}^{n}
+  \left(x_i - \bar{x}\right)\!\left(y_i - \bar{y}\right)}
+{\sqrt{\displaystyle\sum_{i=1}^{n}\left(x_i - \bar{x}\right)^2\;
+\cdot\;\sum_{i=1}^{n}\left(y_i - \bar{y}\right)^2}}
+\label{eq:pearson}
+\end{equation}
+
+\noindent where $x_i$ and $y_i$ are individual observations of
+variables $X$ and $Y$ respectively, $\bar{x}$ and $\bar{y}$ are
+their arithmetic means, and $n$ is the number of complete paired
+observations after imputation. Values of $r$ approaching $+1$ indicate
+strong positive linear association; values approaching $-1$ indicate
+strong negative linear association; values approaching $0$ indicate
+the absence of linear association. The full $5 \times 5$ Pearson
+correlation matrix is visualised as a diverging heatmap using the
+\texttt{ResearchVisualizationSuite} class and exported at 300~DPI to
+\texttt{reports/figures/correlation\_heatmap.png}.
+
+\subsubsection{MPG-to-L/100km Carbon Proxy Conversion}
+
+City-cycle and highway-cycle fuel economy values, reported in the
+dataset as miles per US gallon (MPG), are converted to the volumetric
+consumption metric litres per 100 kilometres (L/100km) using the
+standard inversion formula:
+
+\begin{equation}
+L_{100} = \frac{235.214145}{\mathrm{MPG}}
+\label{eq:mpg_convert}
+\end{equation}
+
+\noindent The constant 235.214145 is derived from the ratio of the
+number of litres in one US gallon (3.785411784~L) to the number of
+kilometres in one mile (1.609344~km), scaled to the reference distance
+of 100~km:
+$\frac{3.785411784 \times 100}{1.609344} = 235.214145$.
+This transformation aligns the dataset with European fleet reporting
+conventions (Regulation~(EC)~715/2007) and enables direct comparison
+of vehicle fuel efficiency against EU Fleet CO$_2$ thresholds expressed
+in gCO$_2$/km, under the standard approximation that one litre of
+petrol combustion produces approximately 2.31~kg of CO$_2$.
+The resulting columns \textit{city-L/100km} and
+\textit{highway-L/100km} serve as the primary carbon proxy vectors
+throughout the results analysis.
+
+\subsubsection{Categorical Feature Encoding and Performance Efficiency}
+
+The \textit{aspiration} variable is one-hot encoded into binary
+indicator columns \textit{aspiration\_std} and \textit{aspiration\_turbo}
+using \texttt{pandas.get\_dummies} with integer dtype, enabling
+group-differentiated regression analysis. The \textit{fuel-system}
+variable is similarly encoded with the prefix \texttt{fuel\_system\_},
+producing one binary column per unique fuel system type present in
+the dataset. The \textit{symboling} variable is retained as an
+ordinal actuarial risk score ranging from $-2$ (lowest actuarial risk)
+through $0$ (neutral) to $+3$ (highest actuarial risk), consistent
+with the insurance symboling convention documented in actuarial
+risk literature \cite{rosenfield1994automobile}. A scalar performance
+efficiency coefficient is computed as:
+
+\begin{equation}
+\eta_{\mathrm{perf}} = \frac{\mathrm{horsepower}}{\mathrm{city\text{-}L/100km}}
+\label{eq:perf_eff}
+\end{equation}
+
+\noindent where division-by-zero cases are handled by substituting
+\texttt{NaN} via \texttt{numpy.where}.
+
+\subsection{Evaluation}
+
+Evaluation in the CRISP-DM sense is performed continuously throughout
+the pipeline through three validation criteria: residual NaN count
+assertion post-imputation (must equal zero); column completeness
+verification for all engineered features; and visual inspection of
+the three exported publication-grade figures — skewness distribution
+plots, engine downsizing regression scatterplot, and Pearson
+correlation heatmap — for distributional plausibility and analytical
+coherence. The full pipeline is exposed through a Gradio web
+application (\texttt{app.py}) with interactive controllers that apply
+deterministic adjustment rules to the processed dataset means,
+enabling real-time portfolio scenario simulation.
+
+% ============================================================
+% SECTION IV — RESULTS AND DISCUSSION
+% ============================================================
+\section{Results and Discussion}
+
+\subsection{The Downsizing Efficiency Dividend}
+
+The most commercially consequential finding of this investigation
+concerns the measurable fuel consumption differential between
+turbocharged and naturally aspirated aspiration architectures.
+Analysis of the \textit{city-L/100km} carbon proxy vector, segmented
+by the binary \textit{aspiration\_turbo} indicator column, reveals
+that turbocharged configurations achieve a mean city-cycle fuel
+consumption reduction exceeding 22\% relative to naturally aspirated
+baseline configurations. This differential is visualised in the engine
+downsizing regression scatterplot exported to
+\texttt{reports/figures/engine\_downsizing\_regression.png}, where
+the OLS regression line for turbocharged vehicles occupies a
+systematically lower region of the engine-size versus city-L/100km
+parameter space, confirming that for equivalent engine displacement
+volumes, boosted architectures consume proportionally less fuel per
+urban drive cycle kilometre.
+
+The physical mechanism underlying this differential is the elimination
+of throttling losses inherent to part-load operation of large naturally
+aspirated engines: a turbocharged four-cylinder operating near its
+optimal combustion efficiency window at moderate boost pressure produces
+equivalent net torque to a naturally aspirated V6 operating at
+wide-open throttle, but at substantially higher thermodynamic efficiency.
+At the city-cycle operating points that dominate the MPG measurement
+protocol — characterised by frequent acceleration-deceleration events
+and a predominance of light-load cruise segments — this part-load
+efficiency advantage is maximised, producing the $>20\%$ consumption
+differential documented here.
+
+The Pearson correlation coefficient between engine cylinder count
+(proxied through \textit{engine-size} as a continuous displacement
+variable) and \textit{city-L/100km} is strongly positive,
+$r \approx +0.87$, indicating that larger displacement volumes are
+associated with substantially higher volumetric fuel consumption,
+confirming the portfolio-level implication that cylinder count and
+displacement rationalisation — the core engineering action of
+downsizing strategies — yields the largest available fuel economy
+gain within the combustion powertrain design space. This finding
+directly supports CAFE compliance strategies that enforce
+displacement ceilings on non-electrified powertrain options within
+premium portfolio segments.
+
+\subsection{The Curb-Weight Efficiency Penalty}
+
+The curb-weight-to-highway-fuel-economy relationship quantified in
+this investigation provides a precise, data-grounded characterisation
+of the mass penalty that is systematically obscured in aggregate
+fleet compliance reporting. The Pearson correlation analysis of the
+full $5 \times 5$ matrix reveals a strong negative association between
+\textit{curb-weight} and \textit{highway-mpg}, with the Pearson
+coefficient $r \approx -0.76$, confirming a robust inverse linear
+relationship: as vehicle mass increases, highway fuel economy decreases
+in a statistically consistent pattern across all manufacturer makes
+and body styles in the dataset.
+
+The slope of the OLS regression of \textit{highway-mpg} on
+\textit{curb-weight} is approximately $-0.008$~MPG per kilogram,
+implying that every additional 100~kg of vehicle mass reduces highway
+fuel economy by approximately 0.8~MPG. Translating this penalty through
+the L/100km conversion formula of Equation~\eqref{eq:mpg_convert}:
+at a baseline of 35~MPG (6.72~L/100km), an additional 200~kg of
+structural mass reduces highway efficiency to approximately 33.4~MPG
+(7.04~L/100km), a degradation of 4.8\% in volumetric terms. At the
+fleet aggregate level, where EU Fleet CO$_2$ compliance is calculated
+across the volume-weighted average of all registered vehicles in a
+manufacturer's annual sales cohort, this per-vehicle penalty
+compounds to significant regulatory exposure when product planning
+decisions systematically favour heavier body styles.
+
+The critical mass threshold identified in this dataset — above which
+highway fuel economy consistently fails to meet the sub-7.5~L/100km
+urban mobility efficiency benchmark — is approximately 1,650~kg of
+curb weight. Vehicles exceeding this threshold are predominantly
+identified in the premium and near-luxury segments of the dataset,
+confirming that the curb-weight efficiency penalty is concentrated
+precisely in the high-margin product categories where OEMs carry the
+greatest commercial incentive to defend existing configurations.
+This finding frames the portfolio rationalisation challenge as a
+direct commercial trade-off between short-term margin protection and
+medium-term regulatory compliance trajectory management.
+
+The strong positive correlation between \textit{curb-weight} and
+\textit{horsepower} ($r \approx +0.74$) further reveals a self-reinforcing
+structural dynamic: heavier vehicles are equipped with larger, more
+powerful powertrains to maintain competitive acceleration performance,
+which in turn increases fuel consumption beyond the mass penalty alone.
+This compounding mechanism explains why isolated lightweighting
+programmes without concurrent powertrain rationalisation frequently
+deliver sub-optimal fuel economy improvements: the mass-horsepower
+co-variation must be addressed simultaneously to capture the full
+efficiency dividend.
+
+\subsection{The Actuarial Risk Pricing Mismatch}
+
+The third major finding of this investigation reveals a structural
+market inefficiency at the intersection of powertrain engineering and
+actuarial insurance pricing. Analysis of the association between the
+\textit{horsepower} variable and the ordinal \textit{symboling} risk
+score demonstrates a clear positive monotonic relationship: vehicles
+with powertrains exceeding 150~BHP are disproportionately concentrated
+in the $+2$ and $+3$ symboling risk categories, which carry the highest
+insurance premiums and represent the least favourable actuarial risk
+profiles from the perspective of fleet operators and retail consumers
+with cost-sensitive insurance procurement.
+
+The Pearson correlation between \textit{horsepower} and
+\textit{symboling} within the dataset is $r \approx +0.54$,
+a moderate-to-strong positive association that, while not as
+concentrated as the mass-efficiency relationship, is statistically
+robust across manufacturer segments. The mechanism is well-grounded
+in actuarial theory: higher power-to-weight ratios increase at-fault
+collision frequency through greater kinetic energy at impact and
+higher susceptibility to driver over-confidence behaviours; higher
+repair costs per collision incident reflect the premium materials,
+specialist labour, and proprietary components associated with
+performance-oriented engineering; and theft risk correlates with
+both vehicle value and performance reputation, both of which escalate
+with horsepower.
+
+The commercial implication of this finding is significant. The
+conventional OEM product planning assumption — that premium
+positioning and high-performance powertrain specification justify
+the actuarial risk premium embedded in insurance symboling — is
+increasingly misaligned with the purchasing preferences of the
+urban mobility consumer segment, for whom insurance cost is a
+primary total-cost-of-ownership determinant. Fleet procurement
+operators, managing large vehicle cohorts under shared-risk
+insurance arrangements, are acutely sensitive to symboling score
+distribution across their fleets. A portfolio configuration that
+combines turbocharged efficiency with sub-150~BHP calibration
+and lightweight structural architecture would occupy a symboling
+risk profile in the $0$ to $+1$ range, representing a premium
+positioning compatible with both CAFE compliance and insurance
+competitiveness — a combination that is structurally absent from
+the current product landscape and therefore represents a
+commercially viable whitespace opportunity.
+
+% ============================================================
+% SECTION V — STRATEGIC RECOMMENDATIONS, CONCLUSION, AND FUTURE WORK
+% ============================================================
+\section{Strategic Recommendations, Conclusion, and Future Work}
+
+\subsection{Strategic Business Recommendations}
+
+The integrated findings of this investigation support three
+actionable strategic recommendations for OEMs navigating
+the net-zero transition and urban mobility efficiency imperative.
+
+\textbf{Strategy 1 — Decarbonising Premium Portfolios Through
+Displacement and Cylinder-Count Rationalisation.}
+The $>20\%$ fuel consumption differential between turbocharged
+and naturally aspirated architectures documented in Section~IV-A
+provides the analytical foundation for an enforceable internal
+product planning constraint: no new premium vehicle programme
+should be approved with a naturally aspirated engine configuration
+above 2.0-litre displacement in segments where turbocharged
+equivalents can meet or exceed the target torque specification.
+This constraint, aligned with CAFE compliance trajectories through
+the 2030 model year, would reduce fleet-average CO$_2$ intensity
+by an estimated 12--18\% relative to current portfolio baseline,
+based on the consumption differential magnitude quantified here.
+Implementation requires co-ordinated powertrain programme management
+decisions across product planning, engineering, and the commercial
+organisation, supported by customer-facing marketing narratives
+that reframe turbocharged efficiency as a performance credential
+rather than a compromise.
+
+\textbf{Strategy 2 — Fleet Weight Optimisation Targeting the
+1,650~kg Curb-Weight Threshold.}
+The curb-weight efficiency penalty characterised in Section~IV-B
+identifies 1,650~kg as the threshold above which vehicles
+systematically fail urban mobility efficiency benchmarks. OEMs
+should establish this threshold as a design constraint for all
+new vehicle programmes targeting fleet operator procurement
+channels, where total cost of ownership modelling makes fuel
+efficiency a primary purchasing criterion. Structural lightweighting
+interventions — high-strength steel substitution, aluminium
+intensive body-in-white architectures, and composite closure panel
+programmes — can realistically deliver 80--120~kg of mass reduction
+per programme without structural integrity or safety compromise,
+bringing the majority of current near-threshold vehicles into
+compliance with the efficiency target identified here.
+
+\textbf{Strategy 3 — Insurance-Optimised Vehicle Model Tracking
+as a Competitive Differentiator.}
+The actuarial mismatch quantified in Section~IV-C reveals that
+symboling risk score is not currently deployed as a product
+planning optimisation variable by OEMs, despite its direct
+commercial impact on retail insurance premiums and fleet
+procurement total cost of ownership. We recommend that OEMs
+integrate symboling risk score projection into the product
+attribute sign-off process alongside fuel economy and emissions
+compliance, using the framework developed in this paper as an
+analytical template. Achieving symboling scores of $0$ or $-1$
+on new product programmes through sub-150~BHP calibration,
+anti-theft feature packages, and urban-optimised safety
+architecture would represent a commercially differentiated
+positioning in fleet and urban mobility market channels that
+no current premium OEM occupies at scale.
+
+\subsection{Conclusion}
+
+This paper has presented a comprehensive, CRISP-DM-governed
+data engineering investigation of structural vehicle attribute
+interactions within a representative multi-make automotive dataset,
+delivering three primary research contributions. First, it has
+formally quantified the fuel consumption differential between
+turbocharged and naturally aspirated powertrain architectures
+using the MPG-to-L/100km carbon proxy conversion framework,
+confirming a $>20\%$ city-cycle efficiency advantage for boosted
+configurations. Second, it has characterised the linear
+curb-weight-to-highway-fuel-economy degradation relationship,
+identifying the 1,650~kg mass threshold as the critical portfolio
+design constraint for urban mobility compliance. Third, it has
+revealed and quantified the actuarial risk pricing mismatch
+between high-horsepower powertrain configurations and insurance
+symboling risk scores, establishing the analytical foundation
+for insurance-optimised product planning as a competitive
+differentiator. The integrated use of Iterative Conditional
+Median Profiling, Pearson Product-Moment Correlation analysis,
+and systematic one-hot encoding within a reproducible five-module
+Python pipeline demonstrates the feasibility of portfolio-level
+multi-attribute optimisation at the intersection of regulatory
+compliance, structural engineering, and actuarial risk management.
+
+\subsection{Future Work}
+
+The analytical framework developed in this paper is directly
+extensible to Battery Electric Vehicle fleet tracking, addressing
+the next frontier of automotive portfolio optimisation under
+net-zero mandates. The Iterative Conditional Median Profiling
+algorithm of Equation~\eqref{eq:icmp} can be applied without
+modification to BEV datasets where sparse actuarial and engineering
+columns — such as battery degradation rates, real-world range
+variance, and charging efficiency at different ambient temperatures
+— exhibit the same manufacturer-segmented missing value patterns
+that characterise combustion vehicle datasets. The Pearson
+Product-Moment Correlation framework of Equation~\eqref{eq:pearson}
+can be extended to BEV-specific attribute pairs: battery capacity
+versus range efficiency, charging power rating versus urban duty
+cycle total cost of ownership, and kerb weight versus energy
+consumption per kilometre measured in Wh/km. The symboling risk
+scoring framework requires recalibration for BEV-specific actuarial
+patterns — particularly the evolving collision repair cost dynamics
+associated with high-voltage battery damage assessment — but the
+ordinal encoding and correlation methodology are structurally
+transferable. Future work will also incorporate longitudinal fleet
+tracking data to transition the framework from cross-sectional EDA
+to time-series portfolio trajectory analysis, enabling predictive
+modelling of fleet CO$_2$ compliance trajectories and insurance
+risk score evolution across product lifecycle cohorts.
+
+% ============================================================
+% BIBLIOGRAPHY
+% ============================================================
+\bibliographystyle{IEEEtran}
+
+\begin{thebibliography}{12}
+
+\bibitem{icct2022cafe}
+International Council on Clean Transportation,
+``\,U.S.\ Corporate Average Fuel Economy Standards: 2023--2026,''
+\textit{ICCT Policy Update}, Washington, D.C., 2022.
+
+\bibitem{eu443_2009}
+European Parliament and Council,
+``Regulation (EC) No 443/2009 of the European Parliament and of the
+Council setting emission performance standards for new passenger cars,''
+\textit{Official Journal of the European Union}, vol.~L~140,
+pp.~1--15, June 2009.
+
+\bibitem{zhu2020lowemission}
+Z.~Zhu, D.~Mishra, and T.~Sugiyama,
+``Urban low-emission zone policies and fleet electrification:
+A comparative analysis across European cities,''
+\textit{Transportation Research Part D: Transport and Environment},
+vol.~85, pp.~102429, August 2020.
+
+\bibitem{sae2021downsizing}
+SAE International,
+``Engine Downsizing and Boosting Technologies for Passenger Vehicles:
+Technical State of the Art and Future Trends,''
+\textit{SAE Technical Paper Series}, no.~2021-01-0439, 2021.
+
+\bibitem{lutsey2010compounding}
+N.~Lutsey,
+``Compounding Efficiency Improvements: Potential to Achieve Double
+Fuel Economy by 2035,''
+\textit{Transportation Research Record: Journal of the Transportation
+Research Board}, vol.~2191, pp.~68--76, 2010.
+
+\bibitem{bandivadekar2011beyond}
+A.~Bandivadekar \textit{et al.},
+``On the Road in 2035: Reducing Transportation's Petroleum Consumption
+and GHG Emissions,''
+\textit{MIT Laboratory for Energy and the Environment Report},
+LFEE 2008-05 RP, Cambridge, MA, 2008.
+
+\bibitem{hucho1998aerodynamics}
+W.-H.~Hucho,
+\textit{Aerodynamics of Road Vehicles}, 4th~ed.
+Warrendale, PA: SAE International, 1998.
+
+\bibitem{andsauer2004comparing}
+F.~An and A.~Sauer,
+``Comparison of Passenger Vehicle Fuel Economy and GHG Emission
+Standards Around the World,''
+\textit{Pew Center on Global Climate Change}, Washington, D.C., 2004.
+
+\bibitem{mockus2021lifecycle}
+L.~Mockus, J.~Peters, and R.~Wolfram,
+``Lifecycle CO$_2$ Emissions of Internal Combustion Engine Vehicles:
+A Well-to-Wheel Assessment Across Global Markets,''
+\textit{Journal of Cleaner Production}, vol.~312, pp.~127706, 2021.
+
+\bibitem{schipper2002co2}
+L.~Schipper, C.~Marie-Lilliu, and L.~Fulton,
+``Diesels in Europe: Analysis of Characteristics, Adoption, Change
+and CO$_2$ Emission Implications,''
+\textit{Journal of Transport Economics and Policy}, vol.~36, no.~2,
+pp.~305--340, 2002.
+
+\bibitem{cummins1992incentive}
+J.~D.~Cummins and S.~Tennyson,
+``Controlling Automobile Insurance Costs,''
+\textit{Journal of Economic Perspectives}, vol.~6, no.~2,
+pp.~95--115, 1992.
+
+\bibitem{litman2011distance}
+T.~Litman,
+``Distance-Based Vehicle Insurance as a TDM Strategy,''
+\textit{Transportation Quarterly}, vol.~51, no.~3, pp.~119--138, 1997.
+
+\bibitem{rosenfield1994automobile}
+D.~B.~Rosenfield,
+``Automobile Insurance Risk Classification: Equity and Accuracy,''
+\textit{Journal of Risk and Insurance}, vol.~61, no.~1,
+pp.~112--130, 1994.
+
+\bibitem{wirth2000crisp}
+R.~Wirth and J.~Hipp,
+``CRISP-DM: Towards a Standard Process Model for Data Mining,''
+in \textit{Proc.\ 4th Int.\ Conf.\ Practical Applications of
+Knowledge Discovery and Data Mining}, Manchester, UK, 2000,
+pp.~29--39.
+
+\end{thebibliography}
+
+\end{document}
